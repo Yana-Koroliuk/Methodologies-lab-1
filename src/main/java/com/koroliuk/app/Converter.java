@@ -14,7 +14,6 @@ public class Converter {
     public String markdownToHtml() {
         String html = markdown;
 
-        // Preformatted text blocks
         Pattern prePattern = Pattern.compile("(?<![\\w`*\\u0400-\\u04FF])```(\\S(?:.*?\\S)?)```(?![\\w`*\\u0400-\\u04FF])", Pattern.DOTALL);
         Matcher preMatcher = prePattern.matcher(html);
         while (preMatcher.find()) {
@@ -22,19 +21,19 @@ public class Converter {
             html = html.replace(preMatcher.group(), "<pre>" + preText + "</pre>");
         }
 
-        // Bold
         html = html.replaceAll("(?<![\\w`*\u0400-\u04FF])\\*\\*(\\S(?:.*?\\S)?)\\*\\*(?![\\w`*\u0400-\u04FF])", "<b>$1</b>");
-        // Italic
         html = html.replaceAll("(?<![\\w`*\\u0400-\\u04FF])_(\\S(?:.*?\\S)?)_(?![\\w`*\\u0400-\\u04FF])", "<i>$1</i>");
-        // Monospaced
         html = html.replaceAll("(?<![\\w`*\\u0400-\\u04FF])`(\\S(?:.*?\\S)?)`(?![\\w`*\\u0400-\\u04FF])", "<tt>$1</tt>");
 
-        // Paragraphs
-        html = html.replaceAll("(?m)^(?!<pre>)(?!.*</pre>$).+$", "<p>$0</p>");
-        html = html.replaceAll("\\n\\n", "</p><p>");
-        html = html.replaceAll("(?m)<p>\\s*</p>", "");
+        String[] paragraphs = html.split("\n{2,}");
+        StringBuilder htmlBuilder = new StringBuilder();
+        for (String paragraph : paragraphs) {
+            if (!paragraph.isEmpty()) {
+                htmlBuilder.append("<p>").append(paragraph).append("</p>\n");
+            }
+        }
+        html = htmlBuilder.toString();
 
-        // Remove the potential <p> tags around pre blocks
         html = html.replaceAll("<p><pre>(.+?)</pre></p>", "<pre>$1</pre>");
 
         return html;
