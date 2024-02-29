@@ -52,6 +52,7 @@ public class Converter {
             html = html.replace("PREBLOCK" + i, "<pre>" + preBlocks.get(i) + "</pre>");
         }
         html = html.replaceAll("<p><pre>(.+?)</pre></p>", "<pre>$1</pre>");
+        System.out.println(checkCopy);
         checkForUnbalancedMarkers(checkCopy);
         return html;
     }
