@@ -3,29 +3,30 @@ package com.koroliuk.app;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Path: ");
-        String inputData = scanner.nextLine();
+        if (args.length < 1) {
+            System.err.println("Usage: java -cp src/main/java com.koroliuk.app.Main <inputFile> [--out outputFile]");
+            System.exit(1);
+        }
+        String inputFilePath = args[0];
+        String outputFilePath = null;
+        if (args.length > 2 && "--out".equals(args[1])) {
+            outputFilePath = args[2];
+        }
         try {
-            if (inputData.contains("--out")) {
-                String inputFile = List.of(inputData.split(" ")).get(0);
-                String outputFile = List.of(inputData.split(" ")).get(2);
-                String content = Files.readString(Paths.get(inputFile));
-                Converter converter = new Converter(content);
-                String outputHtml = converter.markdownToHtml();
-                Files.writeString(Paths.get(outputFile), outputHtml);
+            String markdownContent = Files.readString(Paths.get(inputFilePath));
+            Converter converter = new Converter(markdownContent);
+            String htmlContent = converter.markdownToHtml();
+            if (outputFilePath != null) {
+                Files.writeString(Paths.get(outputFilePath), htmlContent);
+                System.out.println("Output written to " + outputFilePath);
             } else {
-                String content = Files.readString(Paths.get(inputData));
-                Converter converter = new Converter(content);
-                System.out.println(converter.markdownToHtml());
+                System.out.println(htmlContent);
             }
         } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
+            System.err.println("Error handling file: " + e.getMessage());
             System.exit(1);
         }
     }
