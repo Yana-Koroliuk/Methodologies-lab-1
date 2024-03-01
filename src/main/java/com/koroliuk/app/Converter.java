@@ -56,7 +56,6 @@ public class Converter {
             html = html.replace("PREBLOCK" + i, "<pre>" + preBlocks.get(i) + "</pre>");
         }
         html = html.replaceAll("<p><pre>(.+?)</pre></p>", "<pre>$1</pre>");
-        //System.out.println(checkCopy);
         checkForUnbalancedMarkers(checkCopy);
         return html;
     }
@@ -79,8 +78,9 @@ public class Converter {
         int count = 0;
         int idx = 0;
         while ((idx = text.indexOf(substring, idx)) != -1) {
-            boolean beforeIsMatch = idx > 0 && Character.toString(text.charAt(idx - 1)).matches("[A-Za-z0-9,\\u0400-\\u04FF]");
-            boolean afterIsMatch = idx + substring.length() < text.length() && Character.toString(text.charAt(idx + substring.length())).matches("[A-Za-z0-9,\\u0400-\\u04FF]");
+            String regex = "[A-Za-z0-9,\\u0400-\\u04FF]";
+            boolean beforeIsMatch = idx > 0 && Character.toString(text.charAt(idx - 1)).matches(regex);
+            boolean afterIsMatch = idx + substring.length() < text.length() && Character.toString(text.charAt(idx + substring.length())).matches(regex);
             if (!((!beforeIsMatch && !afterIsMatch) || (beforeIsMatch && afterIsMatch))) {
                 count++;
             }
