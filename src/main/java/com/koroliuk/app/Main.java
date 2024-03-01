@@ -28,6 +28,9 @@ public class Main {
         } catch (IOException e) {
             System.err.println("Error handling file: " + e.getMessage());
             System.exit(1);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
     }
 }

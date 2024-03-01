@@ -110,9 +110,9 @@ public class Converter {
     private List<String> getMatchPatternList(String regex, String html) {
         List<String> regexBlocks = new ArrayList<>();
         Pattern regexPatten = Pattern.compile(regex, Pattern.DOTALL);
-        Matcher boldMatcher = regexPatten.matcher(html);
-        while (boldMatcher.find()) {
-            regexBlocks.add(boldMatcher.group(1));
+        Matcher regexMatcher = regexPatten.matcher(html);
+        while (regexMatcher.find()) {
+            regexBlocks.add(regexMatcher.group(1));
         }
         return regexBlocks;
     }
