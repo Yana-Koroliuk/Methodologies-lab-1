@@ -16,13 +16,19 @@ public class Converter {
         List<String> preBlocks = new ArrayList<>();
         String html = markdown;
 
-        Pattern prePattern = Pattern.compile("```(.*?)```", Pattern.DOTALL);
+        Pattern prePattern = Pattern.compile("(?m)(^\\n?|^)```(.*?)```(\\n?|$)", Pattern.DOTALL);
         Matcher preMatcher = prePattern.matcher(html);
+        StringBuilder stringBuilder = new StringBuilder();
         int preIndex = 0;
         while (preMatcher.find()) {
-            preBlocks.add(preMatcher.group(1));
-            html = html.replace(preMatcher.group(), "PREBLOCK" + preIndex++);
+            String prefix = preMatcher.group(1);
+            String suffix = preMatcher.group(3);
+            preBlocks.add(preMatcher.group(2));
+            String replacement = (prefix.isEmpty() ? "" : "\n") + "PREBLOCK" + preIndex++ + (suffix.isEmpty() ? "" : "\n");
+            preMatcher.appendReplacement(stringBuilder, Matcher.quoteReplacement(replacement));
         }
+        preMatcher.appendTail(stringBuilder);
+        html = stringBuilder.toString();
         String checkCopy = html;
 
         String regexBold = "(?<![\\w`*\u0400-\u04FF])\\*\\*(\\S(?:.*?\\S)?)\\*\\*(?![\\w`*\u0400-\u04FF])";
@@ -55,7 +61,6 @@ public class Converter {
         for (int i = 0; i < preBlocks.size(); i++) {
             html = html.replace("PREBLOCK" + i, "<pre>" + preBlocks.get(i) + "</pre>");
         }
-        html = html.replaceAll("<p><pre>(.+?)</pre></p>", "<pre>$1</pre>");
         checkForUnbalancedMarkers(checkCopy);
         return html;
     }
@@ -70,24 +75,38 @@ public class Converter {
     }
 
     private boolean hasUnbalancedMarkers(String text, String marker) {
-        int countMarkers = countOccurrences(text, marker);
-        return countMarkers % 2 != 0;
+        int openPos = -1;
+        int closePos = -1;
+
+        for (int idx = 0; idx < text.length(); idx++) {
+            if (text.startsWith(marker, idx)) {
+                boolean atWordEnd = (idx > 0 && Character.isLetterOrDigit(text.charAt(idx - 1))) &&
+                        (idx + marker.length() == text.length() || !Character.isLetterOrDigit(text.charAt(idx + marker.length())));
+                String regex = "[A-Za-z0-9,\\u0400-\\u04FF]";
+                boolean beforeIsMatch = idx > 0 && Character.toString(text.charAt(idx - 1)).matches(regex);
+                boolean afterIsMatch = idx + marker.length() < text.length() && Character.toString(text.charAt(idx + marker.length())).matches(regex);
+
+                if (atWordEnd || ((!beforeIsMatch && !afterIsMatch) || (beforeIsMatch && afterIsMatch))) {
+                    idx += marker.length() - 1;
+                    continue;
+                }
+                if (openPos == -1 || closePos != -1) {
+                    openPos = idx;
+                    closePos = -1;
+                    idx += marker.length() - 1;
+                } else if (openPos != -1) {
+                    closePos = idx;
+                    idx += marker.length() - 1;
+                }
+            }
+            if (openPos != -1 && closePos == -1 && (text.charAt(idx) == '\n' || idx == text.length() - 1)) {
+                return true;
+            }
+        }
+
+        return openPos != -1 && closePos == -1;
     }
 
-    private int countOccurrences(String text, String substring) {
-        int count = 0;
-        int idx = 0;
-        while ((idx = text.indexOf(substring, idx)) != -1) {
-            String regex = "[A-Za-z0-9,\\u0400-\\u04FF]";
-            boolean beforeIsMatch = idx > 0 && Character.toString(text.charAt(idx - 1)).matches(regex);
-            boolean afterIsMatch = idx + substring.length() < text.length() && Character.toString(text.charAt(idx + substring.length())).matches(regex);
-            if (!((!beforeIsMatch && !afterIsMatch) || (beforeIsMatch && afterIsMatch))) {
-                count++;
-            }
-            idx += substring.length();
-        }
-        return count;
-    }
 
     private List<String> getMatchPatternList(String regex, String html) {
         List<String> regexBlocks = new ArrayList<>();
