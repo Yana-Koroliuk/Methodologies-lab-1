@@ -57,7 +57,6 @@ public class Converter {
             }
         }
         html = htmlBuilder.toString();
-
         for (int i = 0; i < preBlocks.size(); i++) {
             html = html.replace("PREBLOCK" + i, "<pre>" + preBlocks.get(i) + "</pre>");
         }
